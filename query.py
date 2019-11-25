@@ -101,26 +101,46 @@ def query4():
     return result
 
 
-def query5():
-    """ Finds airbnbs within 1000 meters from location (longitude, latitude) using geoNear. 
-        Find average fare for each hour.
-        Find average manhattan distance travelled for each hour.
-        Count total number of rides per pickup hour.
-        Sort by average fare in descending order.
+def query5(latitude, longitude):
+   """ Finds airbnbs within 1000 meters from location (longitude, latitude) using geoNear.
 
-    Projection:
-        dist
-        location
-        name
-        neighbourhood
-        neighbourhood_group
-        price
-        room_type
+   Args:
+       latitude: A float representing latitude coordinate
+       longitude: A float represeting longitude coordinate
+
+   Projection:
+       dist
+       name
+       neighbourhood
+       neighbourhood_group
+       price
+       room_type
 
 
-    """
-    docs = db.airbnb.aggregate(
-        # TODO: implement me
-    )
-    result = [doc for doc in docs]
-    return result
+   """
+   docs = db.airbnb.aggregate([
+       {
+           '$geoNear': {
+               'near': {'type': 'Point', 'coordinates': [longitude, latitude]},
+               'distanceField': 'dist.calculated',
+               'maxDistance': 1000,
+               'spherical': False
+           }
+       },
+       {
+           '$project': {
+               '_id': 0,
+               'dist': 1,
+               'name': 1,
+               'neighbourhood': 1,
+               'neighbourhood_group': 1,
+               'price': 1,
+               'room_type': 1
+           }
+       },
+       {
+           '$sort': {'dist': 1}
+       }
+   ])
+   result = [doc for doc in docs]
+   return result
